@@ -2,6 +2,10 @@ Cascading Change Log
 
 2.6.0 [unreleased]
 
+  Added a new c.t.TupleEntrySchemeIterator property to set certain exceptions to be caught and logged during read. A possible
+  exception is java.io.EOFException when reading faulty gzip files, but other exceptions are possible as well. By default
+  no exception will be caught.
+
   Updated Janino to 2.7.5.
 
   Added ability to add more meta information about a c.f.Flow, which can be read and used by a c.m.DocumentService.
