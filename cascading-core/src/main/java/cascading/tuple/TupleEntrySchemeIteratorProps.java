@@ -20,10 +20,13 @@
 
 package cascading.tuple;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import cascading.property.Props;
+import cascading.util.Util;
 
 /**
  * Class TupleEntrySchemeIteratorProps is a fluent helper class to set properties which control the behavior of the
@@ -37,14 +40,21 @@ public class TupleEntrySchemeIteratorProps extends Props
      * Method setPermittedExceptions(  Map<Object, Object> properties, Class<? extends Exception>[] ... exceptions )
      * is used to set an array of exceptions, which are allowed to be ignored in the TupleEntySchemeInterator. If the array
      * is null, it will be ignored.
+     * <p>Note that the array will be converted to a comma separated String. If you read the the property back, you can
+     * convert it back to classes via the asClasses method.</p>
      *
      * @param properties  a Map<Object, Object>
      * @param exceptions  an array of exception classes.
      */
-    public static void setPermittedExceptions( Map<Object, Object> properties, Class<? extends Exception>[] ... exceptions )
+    public static void setPermittedExceptions( Map<Object, Object> properties, Class<? extends Exception> ... exceptions )
       {
       if ( exceptions != null )
-        properties.put( PERMITTED_EXCEPTIONS, exceptions );
+        {
+        List<String> classNames = new ArrayList<String>();
+        for ( Class<? extends Exception> clazz: exceptions )
+          classNames.add( clazz.getName() );
+        properties.put( PERMITTED_EXCEPTIONS, Util.join( classNames, "," ) );
+        }
       }
 
     private Class<? extends Exception> [] exceptions = null;
@@ -78,4 +88,26 @@ public class TupleEntrySchemeIteratorProps extends Props
       return this;
       }
 
+    /**
+     * Converts a given comma separated String of Exception names into a List of classes. ClassNotFound exceptions are ignored.
+     * @param classNames A comma separated String of Exception names.
+     * @return List of Exception classes.
+     */
+    public static List<Class<? extends Exception>> asClasses( String classNames )
+      {
+      List<Class<? extends Exception>> exceptionClasses = new ArrayList<Class<? extends Exception>>();
+      for ( String className: classNames.split( "," ) )
+        {
+        try
+          {
+          Class<? extends Exception> exceptionClass = (Class<? extends Exception>) Class.forName( className );
+          exceptionClasses.add( exceptionClass );
+          }
+        catch( ClassNotFoundException exception )
+          {
+          // ignore
+          }
+        }
+      return exceptionClasses;
+      }
     }

@@ -21,8 +21,8 @@
 package cascading.tuple;
 
 import java.io.Closeable;
-import java.io.EOFException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -84,7 +84,7 @@ public class TupleEntrySchemeIterator<Config, Input> extends TupleEntryIterator
 
     Object permittedExceptions = flowProcess.getProperty( TupleEntrySchemeIteratorProps.PERMITTED_EXCEPTIONS );
     if ( permittedExceptions != null )
-      this.permittedExceptions = Arrays.asList( ( Class<?extends Exception>[]) permittedExceptions );
+      this.permittedExceptions = TupleEntrySchemeIteratorProps.asClasses( permittedExceptions.toString() );
     else
       this.permittedExceptions = Collections.emptyList();
 
@@ -143,7 +143,7 @@ public class TupleEntrySchemeIterator<Config, Input> extends TupleEntryIterator
       if( permittedExceptions.contains( exception.getClass() ) )
         {
         LOG.warn( "Caught permitted exception while reading {}", identifier, exception );
-        isComplete = true;
+        return false;
         }
       else
         currentException = new TupleException( "unable to read from input identifier: " + identifier, exception );

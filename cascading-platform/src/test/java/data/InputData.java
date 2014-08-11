@@ -62,6 +62,7 @@ public interface InputData
   String inputFileCrossX2 = inputPath + "lhs+rhs-cross-x2.txt";
   String inputFileLhsSparse = inputPath + "lhs-sparse.txt";
   String inputFileRhsSparse = inputPath + "rhs-sparse.txt";
+  String inputFileUnexpectedEndOfFile = inputPath + "unexpectedEndOfFile.gz";
 
   String testDelimited = inputPath + "delimited.txt";
   String testDelimitedHeader = inputPath + "delimited-header.txt";
