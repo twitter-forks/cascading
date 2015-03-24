@@ -20,6 +20,12 @@
 
 package cascading.tap.hadoop;
 
+import static data.InputData.inputFileApache;
+import static data.InputData.inputFileComments;
+import static data.InputData.inputFileCrossX2;
+import static data.InputData.inputFileLower;
+import static data.InputData.inputFileUpper;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -28,6 +34,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.RecordReader;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cascading.PlatformTestCase;
 import cascading.cascade.Cascade;
@@ -54,22 +71,13 @@ import cascading.scheme.hadoop.TextLine;
 import cascading.tap.MultiSourceTap;
 import cascading.tap.SinkMode;
 import cascading.tap.Tap;
+import cascading.tap.partition.DelimitedPartition;
+import cascading.tap.partition.Partition;
 import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
 import data.InputData;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.RecordReader;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static data.InputData.*;
 
 /**
  *
@@ -564,6 +572,38 @@ public class HadoopTapPlatformTest extends PlatformTestCase implements Serializa
     assertEquals( 1, splits.length );
 
     validateLength( source.openForRead( process ), 10 );
+    }
+
+  @Test
+  public void testCombinedPartitionTap() throws Exception
+    {
+    getPlatform().copyFromLocal( inputFileCrossX2 );
+
+    Tap source = getPlatform().getDelimitedFile( new Fields( "number", "lower", "upper" ), " ", inputFileCrossX2 );
+
+    Tap partitionTap = getPlatform().getDelimitedFile( new Fields( "upper" ), "+", getOutputPath( getTestName() + "/partitioned" ), SinkMode.REPLACE );
+
+    Partition partition = new DelimitedPartition( new Fields( "lower", "number" ) );
+    partitionTap = getPlatform().getPartitionTap( partitionTap, partition, 1 );
+
+    Flow firstFlow = getPlatform().getFlowConnector().connect( source, partitionTap, new Pipe( "partition" ) );
+
+    firstFlow.complete();
+
+    // Configure combine inputs for reading from the partition tap
+    Map<Object, Object> properties = getProperties();
+    HfsProps.setUseCombinedInput( properties, true );
+    HfsProps.setCombinedInputMaxSize( properties, 1L );
+
+    Tap sink = getPlatform().getDelimitedFile( new Fields( "number", "lower", "upper" ), "+", getOutputPath( getTestName() + "/final" ), SinkMode.REPLACE );
+
+    Flow secondFlow = getPlatform().getFlowConnector( properties ).connect( partitionTap, sink, new Pipe( "copy" ) );
+
+    secondFlow.complete();
+
+    Tap test = getPlatform().getTextFile( new Fields( "line" ), sink.getIdentifier() );
+
+    validateLength( secondFlow.openTapForRead( test ), 74, Pattern.compile( "[0-9]\\+[a-z]\\+[A-Z]" ) );
     }
 
   @Test
