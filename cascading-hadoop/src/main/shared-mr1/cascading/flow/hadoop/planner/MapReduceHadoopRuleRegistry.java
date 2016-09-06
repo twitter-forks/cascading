@@ -29,6 +29,7 @@ import cascading.flow.hadoop.planner.rule.partitioner.StreamedAccumulatedTapsPip
 import cascading.flow.hadoop.planner.rule.partitioner.StreamedOnlySourcesPipelinePartitioner;
 import cascading.flow.hadoop.planner.rule.partitioner.StreamedSelfJoinSourcesPipelinePartitioner;
 import cascading.flow.hadoop.planner.rule.partitioner.TapGroupTapStepPartitioner;
+import cascading.flow.hadoop.planner.rule.transformer.BalanceHashJoinDistCacheTransformer;
 import cascading.flow.hadoop.planner.rule.transformer.RemoveMalformedHashJoinPipelineTransformer;
 import cascading.flow.hadoop.planner.rule.transformer.TapBalanceCheckpointTransformer;
 import cascading.flow.hadoop.planner.rule.transformer.TapBalanceGroupBlockingHashJoinTransformer;
@@ -116,6 +117,6 @@ public class MapReduceHadoopRuleRegistry extends RuleRegistry
 
     // enable when GraphFinder supports captured edges
 //    addRule( new RemoveStreamedBranchTransformer() );
-
+    addRule( new BalanceHashJoinDistCacheTransformer() );
     }
   }
