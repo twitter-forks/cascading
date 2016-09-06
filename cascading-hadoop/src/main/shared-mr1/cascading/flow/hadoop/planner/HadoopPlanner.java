@@ -186,8 +186,7 @@ public class HadoopPlanner extends FlowPlanner<HadoopFlow, JobConf>
 
     ruleRegistry.addDefaultElementFactory( IntermediateTapElementFactory.TEMP_TAP, new TempTapElementFactory() );
 
-    // disabled by default
-    // ruleRegistry.addDefaultElementFactory( BalanceHashJoinDistCacheTransformer.DIST_CACHE_TAP, new DistCacheTapElementFactory());
+    ruleRegistry.addDefaultElementFactory( BalanceHashJoinDistCacheTransformer.DIST_CACHE_TAP, new DistCacheTapElementFactory());
     }
 
   protected void checkPlatform( Configuration conf )
